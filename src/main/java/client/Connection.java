@@ -1,6 +1,5 @@
 package client;
 
-import com.sun.org.apache.xpath.internal.SourceTree;
 
 import java.io.*;
 import java.net.Socket;
@@ -9,14 +8,12 @@ import java.util.TimerTask;
 
 public class Connection implements Runnable{
 
+    private long lastSentBytes = 0;
     private String ip;
     private int port;
     private String fileName;
     private long timeStart;
-    private long momentTimeStart;
-    private long momentTimeEnd;
     private long sentBytes;
-    private long momentSentBytes;
     private long fileSize;
 
     public Connection(String ip, int port) {
@@ -57,9 +54,6 @@ public class Connection implements Runnable{
             if (!answer.equals("ok")) return;
 
             int count;
-            int delayCounter = 0;
-            long localTimeStart = 0;
-            long localSentBytes = 0;
             byte[] buffer = new byte[8000];
 
             // timer for printing speed and progress
@@ -69,21 +63,9 @@ public class Connection implements Runnable{
             //start sending file
             timeStart = System.currentTimeMillis();
             while ((count = fileInputStream.read(buffer)) > 0) {
-                if (delayCounter == 0) {
-                    localTimeStart = System.currentTimeMillis();
-                    localSentBytes = 0;
-                }
                 outData.write(buffer, 0, count);
                 outData.flush();
                 sentBytes += count;
-                localSentBytes += count;
-                delayCounter++;
-                if (delayCounter > 30) { //otherwise momentum speed might be infinite because one loop iteration ends in less than in 1 millisecond
-                    momentTimeEnd = System.currentTimeMillis();
-                    momentSentBytes = localSentBytes;
-                    momentTimeStart = localTimeStart;
-                    delayCounter = 0;
-                }
             }
             long totalTime = System.currentTimeMillis() - timeStart;
 
@@ -115,7 +97,8 @@ public class Connection implements Runnable{
             System.out.println("--------------------------------");
             System.out.println("Progress: " + (double)sentBytes / fileSize * 100 + "% ");
             System.out.println("Average transmission speed: " + (((double) sentBytes) / 1024 / (System.currentTimeMillis() - timeStart) * 1000) + " KBs per second");
-            System.out.println("Moment transmission speed: " + (((double) momentSentBytes) / 1024 / (momentTimeEnd - momentTimeStart) * 1000) + " KBs per second");
+            System.out.println("Moment transmission speed: " + (((double) sentBytes - lastSentBytes) / 1024 / 3 * 1000) + " KBs per second");
+            lastSentBytes = sentBytes;
         }
     }
 }
