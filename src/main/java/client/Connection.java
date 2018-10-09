@@ -99,8 +99,8 @@ public class Connection implements Runnable{
             System.out.println("--------------------------------");
             System.out.println("Progress: " + (double)sentBytes / fileSize * 100 + "% ");
             System.out.println("Average transmission speed: " + (((double) sentBytes) / 1024 / (System.currentTimeMillis() - timeStart) * 1000) + " KBs per second");
-            System.out.println("Moment transmission speed: " + (((double) momentSentBytes - lastMomentSentBytes) / 1024 / 3) + " KBs per second");
-            lastMomentSentBytes = momentSentBytes;
+            System.out.println("Moment transmission speed: " + (((double) sentBytes - lastMomentSentBytes) / 1024 / 3) + " KBs per second");
+            lastMomentSentBytes = sentBytes;
         }
     }
 }
